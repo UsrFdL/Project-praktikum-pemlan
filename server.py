@@ -5,7 +5,6 @@ import csv
 
 class dataBase():
     def __init__(self):
-        super().__init__()
         self.fieldname = ["username", "password", "nama", "pin", "rekening", "uang", "mutasi"]
         if not os.path.exists("account.csv"):
             with open("account.csv", "w", newline="") as file:
@@ -31,8 +30,18 @@ class dataBase():
         else:
             return False
 
+    def login(self, username, password):
+        with open("account.csv", "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                if username == row["username"] and password == row["password"]:
+                    return True
+                else:
+                    return False
+
 class Server(dataBase):
     def __init__(self):
+        super().__init__()
         self.mqttBroker ="mqtt.eclipseprojects.io"
         self.topicClient = "client"
         self.topicServer = "server"
@@ -45,13 +54,19 @@ class Server(dataBase):
         self.client.publish(self.topicServer, data)
         print(f"publish {data} dengan topic {self.topicServer}")
     
+    def request(self, msg):
+        msg = list(msg.split(","))
+        if msg[0] == "register":
+            self.publish(self.register(msg[1], msg[2]))
+        elif msg[0] == "login":
+            self.publish(self.login(msg[1], msg[2]))
+
     def subscribe(self):
         def on_message(client, userdata, message):
             print("received message:" ,message.payload.decode("utf-8"))
-            self.publish(message.payload.decode("utf-8"))
-            msg = list(message.payload.decode("utf-8").split(","))
-            if(msg[0] == "register"):
-                self.publish(self.register(msg[1], msg[2]))
+            # self.publish(message.payload.decode("utf-8"))
+            self.request(message.payload.decode("utf-8"))
+
         self.client.subscribe(self.topicClient)
         self.client.on_message = on_message
 
@@ -60,11 +75,7 @@ class Server(dataBase):
         self.subscribe()
         self.client.loop_forever()
 
-class runServer(Server):
-    def __init__(self):
-        super().__init__()
-
 
 if __name__ == "__main__":
-    backEnd = runServer()
+    backEnd = Server()
     backEnd.run()
