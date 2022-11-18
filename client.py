@@ -1,12 +1,15 @@
 import paho.mqtt.client as mqtt
 import random
 
-""" class Dashboard():
-    def __init__(self,masukan):
-        print("1.Login\n2.Register")
-        self.masukan= masukan(input(int("Masukan Pilihan Anda: ")))
-    
-    def  """
+# class Dashboard():
+#     def __init__(self):
+#         print("1.Login\n2.Register")
+#         masukan = input(int("Masukan Pilihan Anda: "))
+#         if masukan == 1:
+#             self.login()
+
+#     def login(self):
+
         
 class Client():
     def __init__(self):
@@ -25,7 +28,7 @@ class Client():
     
     def subscribe(self):
         def on_message(client, userdata, message):
-            print("received message:" ,str(message.payload.decode("utf-8")))
+            print("received message:" ,message.payload.decode("utf-8"))
         self.client.subscribe(self.topicServer)
         self.client.on_message = on_message
 

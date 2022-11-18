@@ -1,5 +1,7 @@
 import paho.mqtt.client as mqtt
 import random
+import os
+import csv
 
 class Server():
     def __init__(self):
@@ -17,8 +19,11 @@ class Server():
     
     def subscribe(self):
         def on_message(client, userdata, message):
-            print("received message:" ,str(message.payload.decode("utf-8")))
-            self.publish(str(message.payload.decode("utf-8")))
+            print("received message:" ,message.payload.decode("utf-8"))
+            self.publish(message.payload.decode("utf-8"))
+            msg = list(message.payload.decode("utf-8").split(","))
+            if(msg[0] == "register"):
+                self.publish(self.register(msg[1], msg[2]))
         self.client.subscribe(self.topicClient)
         self.client.on_message = on_message
 
@@ -27,11 +32,35 @@ class Server():
         self.subscribe()
         self.client.loop_forever()
 
-""" class dataBase():
+class dataBase(Server):
     def __init__(self):
-        self. """
+        super().__init__()
+        self.fieldname = ["username", "password", "nama", "pin", "rekening", "uang", "mutasi"]
+        if not os.path.exists("account.csv"):
+            with open("account.csv", "w", newline="") as file:
+                writer = csv.DictWriter(file, fieldnames=self.fieldname)
+                writer.writeheader()               
+
+    def register(self, username, password):
+        ganda = False
+        with open("account.csv", "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                if username == row["username"]:
+                    ganda = True
+        
+        if not ganda:
+            with open("user.csv", "a", newline="") as file:
+                writer = csv.DictWriter(file, fieldnames=self.fieldname)
+                writer.writerow({"username":username, "password": password})
+            return True
+        else:
+            return False
+
+class runServer(dataBase):
+    def __init__(self):
+        super().__init__()
 
 if __name__ == "__main__":
-    backEnd = Server()
-
+    backEnd = runServer()
     backEnd.run()
