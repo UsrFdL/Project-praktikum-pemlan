@@ -3,7 +3,35 @@ import random
 import os
 import csv
 
-class Server():
+class dataBase():
+    def __init__(self):
+        super().__init__()
+        self.fieldname = ["username", "password", "nama", "pin", "rekening", "uang", "mutasi"]
+        if not os.path.exists("account.csv"):
+            with open("account.csv", "w", newline="") as file:
+                writer = csv.DictWriter(file, fieldnames=self.fieldname)
+                writer.writeheader()
+        self.tmpRow = []
+
+    def register(self, username, password):
+        ganda = False
+        with open("account.csv", "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                if username == row["username"]:
+                    ganda = True
+        
+        if not ganda:
+            with open("user.csv", "a", newline="") as file:
+                writer = csv.DictWriter(file, fieldnames=self.fieldname)
+                writer.writerow({"username":username, "password": password})
+            self.tmpRow.append(username)
+            self.tmpRow.append(password)
+            return True
+        else:
+            return False
+
+class Server(dataBase):
     def __init__(self):
         self.mqttBroker ="mqtt.eclipseprojects.io"
         self.topicClient = "client"
@@ -32,34 +60,10 @@ class Server():
         self.subscribe()
         self.client.loop_forever()
 
-class dataBase(Server):
+class runServer(Server):
     def __init__(self):
         super().__init__()
-        self.fieldname = ["username", "password", "nama", "pin", "rekening", "uang", "mutasi"]
-        if not os.path.exists("account.csv"):
-            with open("account.csv", "w", newline="") as file:
-                writer = csv.DictWriter(file, fieldnames=self.fieldname)
-                writer.writeheader()               
 
-    def register(self, username, password):
-        ganda = False
-        with open("account.csv", "r") as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                if username == row["username"]:
-                    ganda = True
-        
-        if not ganda:
-            with open("user.csv", "a", newline="") as file:
-                writer = csv.DictWriter(file, fieldnames=self.fieldname)
-                writer.writerow({"username":username, "password": password})
-            return True
-        else:
-            return False
-
-class runServer(dataBase):
-    def __init__(self):
-        super().__init__()
 
 if __name__ == "__main__":
     backEnd = runServer()

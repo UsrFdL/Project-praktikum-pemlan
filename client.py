@@ -1,17 +1,19 @@
 import paho.mqtt.client as mqtt
 import random
 
-# class Dashboard():
-#     def __init__(self):
-#         print("1.Login\n2.Register")
-#         masukan = input(int("Masukan Pilihan Anda: "))
-#         if masukan == 1:
-#             self.login()
+class Dashboard():
+    def __init__(self):
+        super().__init__()
+        print("1.Login\n2.Register")
+        masukan = input(int("Masukan Pilihan Anda: "))
+        if masukan == 1:
+            self.login()
 
-#     def login(self):
+    def login(self):
+        username = input("Username")
+        password = input("Password")
 
-        
-class Client():
+class Client(Dashboard):
     def __init__(self):
         self.mqttBroker ="mqtt.eclipseprojects.io"
         self.topicClient = "client"
