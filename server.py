@@ -21,9 +21,9 @@ class dataBase():
                     ganda = True
         
         if not ganda:
-            with open("user.csv", "a", newline="") as file:
-                writer = csv.DictWriter(file, fieldnames=self.fieldname)
-                writer.writerow({"username":username, "password": password})
+            # with open("account.csv", "a", newline="") as file:
+            #     writer = csv.DictWriter(file, fieldnames=self.fieldname)
+            #     writer.writerow({"username":username, "password": password})
             self.tmpRow.append(username)
             self.tmpRow.append(password)
             return True
@@ -35,7 +35,7 @@ class dataBase():
             reader = csv.DictReader(file)
             for row in reader:
                 if username == row["username"] and password == row["password"]:
-                    return True
+                    return f"{True},{row['nama']}"
                 else:
                     return False
 
@@ -54,18 +54,18 @@ class Server(dataBase):
         self.client.publish(self.topicServer, data)
         print(f"publish {data} dengan topic {self.topicServer}")
     
-    def request(self, msg):
+    def response(self, msg):
         msg = list(msg.split(","))
         if msg[0] == "register":
-            self.publish(self.register(msg[1], msg[2]))
+            self.publish(f"register,{self.register(msg[1], msg[2])}")
         elif msg[0] == "login":
-            self.publish(self.login(msg[1], msg[2]))
+            self.publish(f"login,{self.login(msg[1], msg[2])}")
 
     def subscribe(self):
         def on_message(client, userdata, message):
             print("received message:" ,message.payload.decode("utf-8"))
             # self.publish(message.payload.decode("utf-8"))
-            self.request(message.payload.decode("utf-8"))
+            self.response(message.payload.decode("utf-8"))
 
         self.client.subscribe(self.topicClient)
         self.client.on_message = on_message
