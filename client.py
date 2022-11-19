@@ -18,28 +18,28 @@ class ATM():
             print("1.Login\n2.Register")
             try:
                 masukan = int(input("Masukan Pilihan Anda: "))
-                if masukan == 1 and masukan == 2:
+                if masukan >= 1 and masukan <= 2:
                     break
                 else:
                     print("masukkan angka 1 atau 2")
             except ValueError:
                 print("Masukkan angka")
             time.sleep(2)
-            
+
         return masukan 
 
     def login(self, msg):
         if msg[1]:
             while True:
                 os.system('cls' if os.name == 'nt' else 'clear')
-                print(f"{'1.': <15}{'Tarik tunai': >15}")
-                print(f"{'2.': <15}{'Deposit': >15}\n")
-                print(f"{'3.': <15}{'Transfer': >15}\n")
-                print(f"{'4.': <15}{'Info ATM': >15}\n")
-                print(f"{'saldo': <15}{msg[2]: >15}")
+                print(f"{'1.': <20}{'Tarik tunai': >10}")
+                print(f"{'2.': <20}{'Deposit': >10}")
+                print(f"{'3.': <20}{'Transfer': >10}")
+                print(f"{'4.': <20}{'Info ATM': >10}\n")
+                print(f"{'saldo': <15}{msg[2]: >10}")
                 try:
                     masukan = int(input(":> "))
-                    if masukan == 1 and masukan == 2:
+                    if masukan >= 1 and masukan <= 4:
                         break
                     else:
                         print("Pilih angka 1 hingga 4")
@@ -52,7 +52,7 @@ class ATM():
     def tarik_tunai(self, msg):
         while True:
             tarikTunai = int(input(f"{'Jumlah tarik tunai': <15}{'': >15}"))
-            if tarikTunai > msg[1]:
+            if tarikTunai > int(msg[2]):
                 print("Saldo tidak mencukupi")
                 time.sleep(2)
             elif tarikTunai < 0:
@@ -66,8 +66,6 @@ class ATM():
         
         return tarikTunai
 
-
-            
 
 class Client(ATM):
     def __init__(self):
@@ -94,10 +92,11 @@ class Client(ATM):
         elif msg[0] == "login":
             if eval(msg[1]):
                 if self.login(msg) == 1:
-                    self.publish(f"tarik_tunai,{self.tarik_tunai(msg)},{msg[2]}")
+                    self.publish(f"tarik_tunai,{self.tarik_tunai(msg)},{msg[3]}")
+        elif msg[0] == "tarik_tunai":
+            if eval(msg[1]):
+                print(msg[2])
 
-                
-    
     def subscribe(self):
         def on_message(client, userdata, message):
             print("received message:" ,message.payload.decode("utf-8"))

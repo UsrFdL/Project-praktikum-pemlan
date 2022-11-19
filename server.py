@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 import random
 import os
 import csv
+import pandas
 
 class dataBase():
     def __init__(self):
@@ -19,7 +20,7 @@ class dataBase():
             for row in reader:
                 if username == row["username"]:
                     ganda = True
-        
+
         if not ganda:
             # with open("account.csv", "a", newline="") as file:
             #     writer = csv.DictWriter(file, fieldnames=self.fieldname)
@@ -35,21 +36,23 @@ class dataBase():
             reader = csv.DictReader(file)
             for row in reader:
                 if username == row["username"] and password == row["password"]:
-                    return f"{True},{row['saldo'],row['rekening']}"
+                    return f"{True},{row['saldo']},{row['rekening']}"
                 else:
                     return False
 
     def tarik_tunai(self, uang, rekening):
         with open("account.csv", "r") as file:
             reader = csv.DictReader(file)
+            idx = 0
             for row in reader:
                 if rekening == row["rekening"]:
-                    
-                    return f"{True},{row['saldo']}"
-                else:
-                    return False
-
-
+                    total = int(row["saldo"]) - int(uang)
+                    pd = pandas.read_csv("account.csv")
+                    pd.loc[idx, "saldo"] = total
+                    pd.to_csv("account.csv")
+                    return f"{True},Berhasil tarik tunai {uang}"
+                idx += 1
+            return False
 
 class Server(dataBase):
     def __init__(self):
@@ -65,7 +68,7 @@ class Server(dataBase):
     def publish(self, data):
         self.client.publish(self.topicServer, data)
         print(f"publish {data} dengan topic {self.topicServer}")
-    
+
     def response(self, msg):
         msg = list(msg.split(","))
         if msg[0] == "register":
@@ -73,8 +76,7 @@ class Server(dataBase):
         elif msg[0] == "login":
             self.publish(f"login,{self.login(msg[1], msg[2])}")
         elif msg[0] == "tarik_tunai":
-            self.publish(f"login,{self.tarik_tunai(msg[1], msg[2])}")
-
+            self.publish(f"tarik_tunai,{self.tarik_tunai(msg[1], msg[2])}")
 
     def subscribe(self):
         def on_message(client, userdata, message):
@@ -89,7 +91,6 @@ class Server(dataBase):
         self.connect()
         self.subscribe()
         self.client.loop_forever()
-
 
 if __name__ == "__main__":
     backEnd = Server()
