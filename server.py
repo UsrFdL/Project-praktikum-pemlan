@@ -5,7 +5,7 @@ import csv
 
 class dataBase():
     def __init__(self):
-        self.fieldname = ["username", "password", "nama", "pin", "rekening", "uang", "mutasi"]
+        self.fieldname = ["username", "password", "nama", "pin", "rekening", "saldo", "mutasi"]
         if not os.path.exists("account.csv"):
             with open("account.csv", "w", newline="") as file:
                 writer = csv.DictWriter(file, fieldnames=self.fieldname)
@@ -35,9 +35,21 @@ class dataBase():
             reader = csv.DictReader(file)
             for row in reader:
                 if username == row["username"] and password == row["password"]:
-                    return f"{True},{row['nama']}"
+                    return f"{True},{row['saldo'],row['rekening']}"
                 else:
                     return False
+
+    def tarik_tunai(self, uang, rekening):
+        with open("account.csv", "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                if rekening == row["rekening"]:
+                    
+                    return f"{True},{row['saldo']}"
+                else:
+                    return False
+
+
 
 class Server(dataBase):
     def __init__(self):
@@ -60,6 +72,9 @@ class Server(dataBase):
             self.publish(f"register,{self.register(msg[1], msg[2])}")
         elif msg[0] == "login":
             self.publish(f"login,{self.login(msg[1], msg[2])}")
+        elif msg[0] == "tarik_tunai":
+            self.publish(f"login,{self.tarik_tunai(msg[1], msg[2])}")
+
 
     def subscribe(self):
         def on_message(client, userdata, message):
