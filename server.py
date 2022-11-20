@@ -36,21 +36,24 @@ class dataBase():
             reader = csv.DictReader(file)
             for row in reader:
                 if username == row["username"] and password == row["password"]:
-                    return f"{True},{row['saldo']},{row['rekening']}"
+                    return f"{True},{row['rekening']},{row['saldo']}"
                 else:
                     return False
 
-    def tarik_tunai(self, uang, rekening):
+    def depo_tarikTunai(self, msg):
         with open("account.csv", "r") as file:
             reader = csv.DictReader(file)
             idx = 0
             for row in reader:
-                if rekening == row["rekening"]:
-                    total = int(row["saldo"]) - int(uang)
+                if msg[1] == row["rekening"]:
+                    if msg[0] == "tarik_tunai":
+                        total = int(row["saldo"]) - int(msg[2])
+                    elif msg[0] == "deposit":
+                        total = int(row["saldo"]) + int(msg[2])
                     pd = pandas.read_csv("account.csv")
                     pd.loc[idx, "saldo"] = total
                     pd.to_csv("account.csv")
-                    return f"{True},Berhasil tarik tunai {uang}"
+                    return f"{True},{msg[1]},{total},Berhasil tarik tunai {msg[2]}"
                 idx += 1
             return False
 
@@ -76,8 +79,10 @@ class Server(dataBase):
         elif msg[0] == "login":
             self.publish(f"login,{self.login(msg[1], msg[2])}")
         elif msg[0] == "tarik_tunai":
-            self.publish(f"tarik_tunai,{self.tarik_tunai(msg[1], msg[2])}")
-
+            self.publish(f"tarik_tunai,{self.depo_tarikTunai(msg)}")
+        elif msg[0] == "deposit":
+            self.publish(f"deposit,{self.depo_tarikTunai(msg)}")
+        
     def subscribe(self):
         def on_message(client, userdata, message):
             print("received message:" ,message.payload.decode("utf-8"))
