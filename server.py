@@ -22,9 +22,6 @@ class dataBase():
                     ganda = True
 
         if not ganda:
-            # with open("account.csv", "a", newline="") as file:
-            #     writer = csv.DictWriter(file, fieldnames=self.fieldname)
-            #     writer.writerow({"username":username, "password": password})
             self.tmpRow.append(username)
             self.tmpRow.append(password)
             return True
@@ -37,8 +34,7 @@ class dataBase():
             for row in reader:
                 if username == row["username"] and password == row["password"]:
                     return f"{True},{row['rekening']},{row['saldo']}"
-                else:
-                    return False
+            return False
 
     def depo_tarikTunai(self, msg):
         with open("account.csv", "r") as file:
@@ -48,12 +44,14 @@ class dataBase():
                 if msg[1] == row["rekening"]:
                     if msg[0] == "tarik_tunai":
                         total = int(row["saldo"]) - int(msg[2])
+                        pesan = "tarika tunai"
                     elif msg[0] == "deposit":
                         total = int(row["saldo"]) + int(msg[2])
+                        pesan = "deposit"
                     pd = pandas.read_csv("account.csv")
                     pd.loc[idx, "saldo"] = total
-                    pd.to_csv("account.csv")
-                    return f"{True},{msg[1]},{total},Berhasil tarik tunai {msg[2]}"
+                    pd.to_csv("account.csv", index=False)
+                    return f"{True},{msg[1]},{total},Berhasil {pesan} senilai {msg[2]}"
                 idx += 1
             return False
 

@@ -12,7 +12,7 @@ class ATM():
         password = input("Password: ")
         return f"{username},{password}"
 
-    def login(self):
+    def menu(self):
         while True:
             os.system('cls' if os.name == 'nt' else 'clear')
             print("1.Login\n2.Register")
@@ -28,18 +28,13 @@ class ATM():
 
         return masukan 
 
-    def menu_utama(self, msg):
+    def menu_login(self, msg):
         if msg[1]:
             while True:
                 os.system('cls' if os.name == 'nt' else 'clear')
                 lis = ["Tarik tunai", "Deposit", "Transfer", "Info ATM", "Keluar"]
                 for i in range(0, len(lis)):
                     print(f"{f'{i+1}.': <25}{lis[i]: >10}")
-                # print(f"{'1.': <25}{'Tarik tunai': >10}")
-                # print(f"{'2.': <25}{'Deposit': >10}")
-                # print(f"{'3.': <25}{'Transfer': >10}")
-                # print(f"{'4.': <25}{'Info ATM': >10}")
-                # print(f"{'5.': <25}{'Keluar': >10}\n")
                 print(f"\n{'saldo:': <25}{msg[3]: >10}")
                 try:
                     masukan = int(input(":> "))
@@ -53,6 +48,14 @@ class ATM():
             
             return masukan
 
+    def menu_register(self):
+        os.system('cls' if os.name == 'nt' else 'clear')
+        nama = input("Masukkan nama lengkap anda:\n:> ")
+        os.system('cls' if os.name == 'nt' else 'clear')
+        pin = input("Masukkan PIN:\n:> ")
+
+        return nama, pin
+        
     def tarik_tunai(self, msg):
         os.system('cls' if os.name == 'nt' else 'clear')
         print(f"Tarik tunai\n\n{'saldo:': <25}{msg[3]: >10}")
@@ -95,6 +98,45 @@ class ATM():
         time.sleep(2)
         return cek, uang
 
+    def dashboard(self, msg=["home"]):
+        if msg[0] == "home":
+            pilih = self.menu()
+            if pilih == 1:
+                return f"login,{self.input_pw_pass()}"
+            elif pilih() == 2:
+                return f"register,{self.input_pw_pass()}"
+        elif msg[0] == "register":
+            if eval(msg[1]):
+                nama, pin = self.menu_register()
+                return f"register_2,{nama},{pin}"
+            else:
+                print("Username sudah digunakan")
+                time.sleep(2)
+                return self.dashboard()
+        elif msg[0] == "login":
+            if eval(msg[1]):
+                pilih = self.menu_login(msg)
+                if pilih == 1:
+                    cek, uang = self.tarik_tunai(msg)
+                    if cek:
+                        return f"tarik_tunai,{msg[2]},{uang}"
+                elif pilih == 2:
+                    cek, uang = self.deposit()
+                    if cek:
+                        return f"deposit,{msg[2]},{uang}"
+                elif pilih == 5:
+                    return self.dashboard()
+            else:
+                print("Username atau password salah")
+                time.sleep(2)
+                return self.dashboard()
+        elif msg[0] == "tarik_tunai" or msg[0] == "deposit":
+            if eval(msg[1]):
+                print(msg[4])
+                time.sleep(2)
+                msg[0] = "login"
+                return self.dashboard(msg)
+
 class Client(ATM):
     def __init__(self):
         self.mqttBroker ="mqtt.eclipseprojects.io"
@@ -109,52 +151,21 @@ class Client(ATM):
         self.client.publish(self.topicClient, teks)
         print(f"publish {teks} dengan topic {self.topicClient}")
 
-    def dashboard(self, msg=["home"]):
-        if msg[0] == "home":
-            pilih = self.login()
-            if pilih == 1:
-                self.publish(f"login,{self.input_pw_pass()}")
-            elif pilih() == 2:
-                self.publish(f"register,{self.input_pw_pass()}")
-        elif msg[0] == "register":
-            msg[1]
-        elif msg[0] == "login":
-            if eval(msg[1]):
-                pilih = self.menu_utama(msg)
-                if pilih == 1:
-                    cek, uang = self.tarik_tunai(msg)
-                    if cek:
-                        self.publish(f"tarik_tunai,{msg[2]},{uang}")
-                elif pilih == 2:
-                    cek, uang = self.deposit()
-                    if cek:
-                        self.publish(f"deposit,{msg[2]},{uang}")
-                elif pilih == 5:
-                    self.dashboard()
-            else:
-                print("Username atau password salah")
-                time.sleep(2)
-                self.dashboard()
-        elif msg[0] == "tarik_tunai" or msg[0] == "deposit":
-            if eval(msg[1]):
-                print(msg[4])
-                time.sleep(2)
-                msg[0] = "login"
-                self.dashboard(msg)
+    def request(self, msg):
+        self.publish(self.dashboard(msg))
 
     def subscribe(self):
         def on_message(client, userdata, message):
             # print("received message:" ,message.payload.decode("utf-8"))
-            self.dashboard(list(message.payload.decode("utf-8").split(",")))
+            self.request(list(message.payload.decode("utf-8").split(",")))
         self.client.subscribe(self.topicServer)
         self.client.on_message = on_message
-
 
     def run(self):
         self.connect()
         # self.client.loop_start()
         self.subscribe()
-        self.dashboard()
+        self.request()
         self.client.loop_forever()
 
 
