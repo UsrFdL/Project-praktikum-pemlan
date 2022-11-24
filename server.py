@@ -54,8 +54,7 @@ class dataBase():
     def depo_tarikTunai(self, msg):
         with open("account.csv", "r") as file:
             reader = csv.DictReader(file)
-            idx = 0
-            saldo_asli = 0
+            idx = saldo_asli = 0
             for row in reader:
                 if msg[1] == row["rekening"]:
                     saldo_asli = row["saldo"]
@@ -72,6 +71,37 @@ class dataBase():
                     pd.to_csv("account.csv", index=False)
                     return f"{True},{msg[1]},{saldo},Berhasil {pesan} senilai {msg[2]}"
                 idx += 1
+
+    def transfer(self, msg):
+        idx = saldo_pengirim = idx_pengirim = saldo_penerima = idx_penerima= 0
+        cek_rek = False
+        with open("account.csv", "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                if msg[1] == row["rekening"]:
+                    saldo_pengirim = row["saldo"]
+                    cek_pin = True if msg[4] == row["pin"] else False
+                    idx_pengirim = idx
+                if msg[2] == row["rekening"]:
+                    saldo_penerima = row["saldo"]
+                    idx_penerima = idx
+                    nama_penerima = row["nama"]
+                    cek_rek = True
+                idx += 1
+        if not cek_rek:
+            return f"{True},{msg[1]},{saldo_pengirim},Nomor rekening tujuan tidak ditemukan"
+        if cek_pin:
+            saldo_pengirim = int(saldo_pengirim) - int(msg[3])
+            saldo_penerima = int(saldo_penerima) + int(msg[3])
+            pd = pandas.read_csv("account.csv")
+            pd.loc[idx_pengirim, "saldo"] = saldo_pengirim
+            pd.loc[idx_penerima, "saldo"] = saldo_penerima
+            pd.to_csv("account.csv", index=False)
+            return f"{True},{msg[1]},{saldo_pengirim},Berhasil transfer ke {nama_penerima} sebesar {msg[3]}"
+        else:
+            return f"{True},{msg[1]},{saldo_pengirim},Pin yang anda masukkan salah"
+           
+               
 
 class Server(dataBase):
     def __init__(self):
@@ -100,6 +130,8 @@ class Server(dataBase):
             self.publish(f"tarik_tunai,{self.depo_tarikTunai(msg)}")
         elif msg[0] == "deposit":
             self.publish(f"deposit,{self.depo_tarikTunai(msg)}")
+        elif msg[0] == "transfer":
+            self.publish(f"transfer,{self.transfer(msg)}")
         
     def subscribe(self):
         def on_message(client, userdata, message):

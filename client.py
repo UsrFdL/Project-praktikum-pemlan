@@ -17,11 +17,11 @@ class ATM():
             os.system('cls' if os.name == 'nt' else 'clear')
             print("1.Login\n2.Register")
             try:
-                masukan = int(input("Masukan Pilihan Anda: "))
+                masukan = int(input("Masukkan Pilihan Anda: "))
                 if masukan >= 1 and masukan <= 2:
                     break
                 else:
-                    print("masukkan angka 1 atau 2")
+                    print("Masukkan angka 1 atau 2")
             except ValueError:
                 print("Masukan harus angka")
             time.sleep(2)
@@ -50,9 +50,9 @@ class ATM():
 
     def menu_register(self):
         os.system('cls' if os.name == 'nt' else 'clear')
-        nama = input("Masukkan nama lengkap anda:\n:> ")
+        nama = input("Nama lengkap anda:\n:> ")
         os.system('cls' if os.name == 'nt' else 'clear')
-        pin = input("Masukkan PIN:\n:> ")
+        pin = input("PIN:\n:> ")
 
         return nama, pin
         
@@ -60,37 +60,32 @@ class ATM():
         os.system('cls' if os.name == 'nt' else 'clear')
         print(f"Tarik tunai\n\n{'saldo:': <25}{msg[3]: >10}")
         cek = False
-        uang = 0
-        pin = 0
+        uang = pin = 0
         try:
-            tarikTunai = int(input(f"{'Jumlah tarik tunai:': <16}{'': >10}"))
+            uang = int(input(f"{'Jumlah tarik tunai:': <16}{'': >10}"))
         except ValueError:
             print("Masukan harus angka")
         else:            
-            if tarikTunai > int(msg[3]):
+            if uang > int(msg[3]):
                 print("Saldo tidak mencukupi")
-            elif tarikTunai <= 0:
+            elif uang <= 0:
                 print("Uang tidak boleh kurang dari 0")
-            elif tarikTunai < 10000:
+            elif uang < 10000:
                 print("Minimal tarik tunai 10.000")
             else:
-                cek = True
-                uang = tarikTunai
-                while True:
-                    os.system('cls' if os.name == 'nt' else 'clear')
-                    try:
-                        pin = int(input(f"{'Masukkan pin anda:': <16}{'': >10}"))
-                    except ValueError:
-                        print("Pin harus angka")
+                pin = input(f"{'Pin:': <16}{'': >10}")
+                try:
+                    int(pin)
+                except ValueError:
+                    print("Pin harus angka")
+                else:
+                    if int(pin) < 0:
+                        print("Pin harus bilangan positif")
+                    elif len(pin) != 4:
+                        print("Pin berjumlah 4 digit")
                     else:
-                        if pin < 0:
-                            print("Pin harus bilangan positif")
-                        elif len(str(pin)) != 4:
-                            print("Pin berjumlah 4 digit")
-                        else:
-                            break
-                    time.sleep(1)
-                return cek, uang, pin
+                        cek = True
+                        return cek, uang, pin
         time.sleep(2)
         return cek, uang, pin
 
@@ -98,74 +93,78 @@ class ATM():
         os.system('cls' if os.name == 'nt' else 'clear')
         print("Deposit\n")
         cek = False
-        uang = 0
-        pin = 0
+        uang = pin = 0
         try:
-            depo = int(input(f"{'Masukkan uang tunai:': <16}{'': >10}"))
+            uang = int(input(f"{'Uang tunai:': <16}{'': >10}"))
         except ValueError:            
             print("Masukan harus angka")
         else:
-            if depo <= 0:
+            if uang <= 0:
                 print("Uang tidak boleh kurang dari 0")
-            elif depo < 10000:
+            elif uang < 10000:
                 print("Minimal tarik tunai 10.000")
             else:
-                cek = True
-                uang = depo
-                while True:
-                    os.system('cls' if os.name == 'nt' else 'clear')
-                    try:
-                        pin = int(input(f"{'Masukkan pin anda:': <16}{'': >10}"))
-                    except ValueError:
-                        print("Pin harus angka")
+                pin = input(f"{'Pin:': <16}{'': >10}")
+                try:
+                    int(pin)
+                except ValueError:
+                    print("Pin harus angka")
+                else:
+                    if int(pin) < 0:
+                        print("Pin harus bilangan positif")
+                    elif len(pin) != 4:
+                        print("Pin berjumlah 4 digit")
                     else:
-                        if pin < 0:
-                            print("Pin harus bilangan positif")
-                        elif len(str(pin)) != 4:
-                            print("Pin berjumlah 4 digit")
-                        else:
-                            break
-                    time.sleep(1)
-                return cek, uang, pin
+                        cek = True
+                        return cek, uang, pin                        
         time.sleep(2)
         return cek, uang, pin
     
-    #Belum selesai
+    # Belum selesai
     def transfer(self, msg):
         os.system('cls' if os.name == 'nt' else 'clear')
-        print("Transfer\n")
+        print(f"Transfer\n\n{'saldo:': <25}{msg[3]: >10}")
         cek = False
-        uang = 0
-        pin = 0
+        uang = pin = tujuan = 0
         try:
-            tujuan = int(input(f"{'Masukkan rekening tujuan:': <16}{'': >10}"))
+            tujuan = int(input(f"{'Rekening tujuan:': <18}{'': >10}"))
         except ValueError:            
             print("Masukan harus angka")
         else:
             if tujuan < 0:
-                print("rekening harus bilangan positif")
+                print("Rekening harus bilangan positif")
             elif len(str(tujuan)) != 5:
-                print("rekening berjumlah 5 digit")
+                print("Rekening berjumlah 5 digit")
+            elif tujuan == int(msg[2]):
+                print("Tidak dapat mengirim tujuan ke rekening sendiri")
             else:
-                cek = True
-                uang = depo
-                while True:
-                    os.system('cls' if os.name == 'nt' else 'clear')
-                    try:
-                        pin = int(input(f"{'Masukkan pin anda:': <16}{'': >10}"))
-                    except ValueError:
-                        print("Pin harus angka")
+                try:
+                    uang = int(input(f"{'Jumlah uang tunai:': <16}{'': >10}"))
+                except ValueError:            
+                    print("Masukan harus angka")
+                else:
+                    if uang > int(msg[3]):
+                        print("Saldo tidak mencukupi")
+                    elif uang <= 0:
+                        print("Uang tidak boleh kurang dari 0")
+                    elif uang < 10000:
+                        print("Minimal transfer 10.000")
                     else:
-                        if pin < 0:
-                            print("Pin harus bilangan positif")
-                        elif len(str(pin)) != 4:
-                            print("Pin berjumlah 4 digit")
+                        pin = input(f"{'Pin:': <18}{'': >10}")
+                        try:
+                            int(pin)
+                        except ValueError:
+                            print("Pin harus angka")
                         else:
-                            break
-                    time.sleep(1)
-                return cek, uang, pin
+                            if int(pin) < 0:
+                                print("Pin harus bilangan positif")
+                            elif len(pin) != 4:
+                                print("Pin berjumlah 4 digit")
+                            else:
+                                cek = True
+                                return cek, tujuan, uang, pin
         time.sleep(2)
-        return cek, uang, pin
+        return cek, tujuan, uang, pin
 
     def dashboard(self, msg=["home"]):
         if msg[0] == "home":
@@ -194,17 +193,27 @@ class ATM():
                     cek, uang, pin = self.tarik_tunai(msg)
                     if cek:
                         return f"tarik_tunai,{msg[2]},{uang},{pin}"
+                    else:
+                        return self.dashboard(msg)
                 elif pilih == 2:
                     cek, uang, pin = self.deposit()
                     if cek:
                         return f"deposit,{msg[2]},{uang},{pin}"
+                    else:
+                        return self.dashboard(msg)
+                elif pilih == 3:
+                    cek, tujuan, uang, pin = self.transfer(msg)
+                    if cek:
+                        return f"transfer,{msg[2]},{tujuan},{uang},{pin}"
+                    else:
+                        return self.dashboard(msg)
                 elif pilih == 5:
                     return self.dashboard()
             else:
                 print("Username atau password salah")
                 time.sleep(2)
                 return self.dashboard()
-        elif msg[0] == "tarik_tunai" or msg[0] == "deposit":
+        elif msg[0] == "tarik_tunai" or msg[0] == "deposit" or msg[0] == "transfer":
             print(msg[4])
             time.sleep(2)
             msg[0] = "login"
