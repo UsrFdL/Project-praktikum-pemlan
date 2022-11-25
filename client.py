@@ -25,7 +25,6 @@ class ATM():
             except ValueError:
                 print("Masukan harus angka")
             time.sleep(2)
-
         return masukan 
 
     def menu_login(self, msg):
@@ -45,7 +44,6 @@ class ATM():
                 except ValueError:
                     print("Masukan harus angka")
                 time.sleep(2)
-            
             return masukan
 
     def menu_register(self):
@@ -53,14 +51,13 @@ class ATM():
         nama = input("Nama lengkap anda:\n:> ")
         os.system('cls' if os.name == 'nt' else 'clear')
         pin = input("PIN:\n:> ")
-
         return nama, pin
         
     def tarik_tunai(self, msg):
         os.system('cls' if os.name == 'nt' else 'clear')
         print(f"Tarik tunai\n\n{'saldo:': <25}{msg[3]: >10}")
         cek = False
-        uang = pin = 0
+        uang = pin = waktu = 0
         try:
             uang = int(input(f"{'Jumlah tarik tunai:': <16}{'': >10}"))
         except ValueError:
@@ -73,7 +70,7 @@ class ATM():
             elif uang < 10000:
                 print("Minimal tarik tunai 10.000")
             else:
-                pin = input(f"{'Pin:': <16}{'': >10}")
+                pin = input(f"{'Pin:': <20}{'': >10}")
                 try:
                     int(pin)
                 except ValueError:
@@ -85,15 +82,16 @@ class ATM():
                         print("Pin berjumlah 4 digit")
                     else:
                         cek = True
-                        return cek, uang, pin
+                        waktu = time.strftime("%d/%m/%Y %H:%M:%S")
+                        return cek, uang, pin, waktu
         time.sleep(2)
-        return cek, uang, pin
+        return cek, uang, pin, waktu
 
     def deposit(self):
         os.system('cls' if os.name == 'nt' else 'clear')
         print("Deposit\n")
         cek = False
-        uang = pin = 0
+        uang = pin = waktu = 0
         try:
             uang = int(input(f"{'Uang tunai:': <16}{'': >10}"))
         except ValueError:            
@@ -104,7 +102,7 @@ class ATM():
             elif uang < 10000:
                 print("Minimal tarik tunai 10.000")
             else:
-                pin = input(f"{'Pin:': <16}{'': >10}")
+                pin = input(f"{'Pin:': <20}{'': >10}")
                 try:
                     int(pin)
                 except ValueError:
@@ -116,16 +114,16 @@ class ATM():
                         print("Pin berjumlah 4 digit")
                     else:
                         cek = True
-                        return cek, uang, pin                        
+                        waktu = time.strftime("%d/%m/%Y %H:%M:%S")
+                        return cek, uang, pin, waktu                 
         time.sleep(2)
-        return cek, uang, pin
+        return cek, uang, pin, waktu
     
-    # Belum selesai
     def transfer(self, msg):
         os.system('cls' if os.name == 'nt' else 'clear')
         print(f"Transfer\n\n{'saldo:': <25}{msg[3]: >10}")
         cek = False
-        uang = pin = tujuan = 0
+        uang = pin = tujuan = waktu = 0
         try:
             tujuan = int(input(f"{'Rekening tujuan:': <18}{'': >10}"))
         except ValueError:            
@@ -162,9 +160,18 @@ class ATM():
                                 print("Pin berjumlah 4 digit")
                             else:
                                 cek = True
-                                return cek, tujuan, uang, pin
+                                waktu = time.strftime("%d/%m/%Y %H:%M:%S")
+                                return cek, tujuan, uang, pin, waktu
         time.sleep(2)
-        return cek, tujuan, uang, pin
+        return cek, tujuan, uang, pin, waktu
+
+    def info(self, msg):
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print(f"Nama\t\t: {msg[4]}\nNo rekening\t: {msg[2]}\nSaldo\t\t: {msg[3]}\n\nMutasi")
+        mutasi = list(msg[5].split("&"))
+        for i in mutasi:
+            print(i)
+        input("\nTekan ENTER untuk kembali")
 
     def dashboard(self, msg=["home"]):
         if msg[0] == "home":
@@ -190,23 +197,25 @@ class ATM():
             if eval(msg[1]):
                 pilih = self.menu_login(msg)
                 if pilih == 1:
-                    cek, uang, pin = self.tarik_tunai(msg)
+                    cek, uang, pin, waktu = self.tarik_tunai(msg)
                     if cek:
-                        return f"tarik_tunai,{msg[2]},{uang},{pin}"
+                        return f"tarik_tunai,{msg[2]},{uang},{pin},{waktu}"
                     else:
                         return self.dashboard(msg)
                 elif pilih == 2:
-                    cek, uang, pin = self.deposit()
+                    cek, uang, pin, waktu = self.deposit()
                     if cek:
-                        return f"deposit,{msg[2]},{uang},{pin}"
+                        return f"deposit,{msg[2]},{uang},{pin},{waktu}"
                     else:
                         return self.dashboard(msg)
                 elif pilih == 3:
-                    cek, tujuan, uang, pin = self.transfer(msg)
+                    cek, tujuan, uang, pin, waktu = self.transfer(msg)
                     if cek:
-                        return f"transfer,{msg[2]},{tujuan},{uang},{pin}"
+                        return f"transfer,{msg[2]},{tujuan},{uang},{pin},{waktu}"
                     else:
                         return self.dashboard(msg)
+                elif pilih == 4:
+                    return f"info,{msg[2]}"
                 elif pilih == 5:
                     return self.dashboard()
             else:
@@ -218,12 +227,16 @@ class ATM():
             time.sleep(2)
             msg[0] = "login"
             return self.dashboard(msg)
+        elif msg[0] == "info":
+            self.info(msg)
+            msg[0] = "login"
+            return self.dashboard(msg)
 
 class Client(ATM):
     def __init__(self):
         self.mqttBroker ="mqtt.eclipseprojects.io"
         self.topicClient = "client"
-        self.topicServer = "server"
+        self.topicServer = f"server-{random.randrange(1, 999)}"
 
     def connect(self):
         self.client = mqtt.Client(f"Server-{random.randint(1, 999)}")
@@ -234,7 +247,7 @@ class Client(ATM):
         print(f"publish {teks} dengan topic {self.topicClient}")
 
     def request(self, msg=["home"]):
-        self.publish(self.dashboard(msg))
+        self.publish(f"{self.topicServer},{self.dashboard(msg)}")
 
     def subscribe(self):
         def on_message(client, userdata, message):

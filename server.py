@@ -52,63 +52,101 @@ class dataBase():
             return False
 
     def depo_tarikTunai(self, msg):
+        pd = pandas.read_csv("account.csv")
         with open("account.csv", "r") as file:
             reader = csv.DictReader(file)
-            idx = saldo_asli = 0
+            idx = saldo_awal = saldo = 0
+            pesan = ""
             for row in reader:
-                if msg[1] == row["rekening"]:
-                    saldo_asli = row["saldo"]
-                    if msg[3] != row["pin"]:
-                        return f"{True},{msg[1]},{saldo_asli},Pin salah"
-                    elif msg[0] == "tarik_tunai":
-                        saldo = int(saldo_asli) - int(msg[2])
+                if msg[2] == row["rekening"]:
+                    saldo_awal = row["saldo"]
+                    if msg[4] != row["pin"]:
+                        return f"{True},{msg[2]},{saldo_awal},Pin salah"
+                    elif msg[1] == "tarik_tunai":
+                        saldo = int(saldo_awal) - int(msg[3])
                         pesan = "tarika tunai"
-                    elif msg[0] == "deposit":
-                        saldo = int(saldo_asli) + int(msg[2])
+                    elif msg[1] == "deposit":
+                        saldo = int(saldo_awal) + int(msg[3])
                         pesan = "deposit"
-                    pd = pandas.read_csv("account.csv")
                     pd.loc[idx, "saldo"] = saldo
+                    if row["mutasi"] == "kosong":
+                        pd.loc[idx, "mutasi"] = f"{pesan.capitalize()} | {msg[5]} | {msg[3]}"
+                    else:
+                        mutasi = row["mutasi"]+f"&{pesan.capitalize()} | {msg[5]} | {msg[3]}"
+                        pd.loc[idx, "mutasi"] = mutasi
                     pd.to_csv("account.csv", index=False)
-                    return f"{True},{msg[1]},{saldo},Berhasil {pesan} senilai {msg[2]}"
+                    return f"{True},{msg[2]},{saldo},Berhasil {pesan} senilai {msg[3]}"
                 idx += 1
 
     def transfer(self, msg):
         idx = saldo_pengirim = idx_pengirim = saldo_penerima = idx_penerima= 0
         cek_rek = False
+        pd = pandas.read_csv("account.csv")
         with open("account.csv", "r") as file:
             reader = csv.DictReader(file)
             for row in reader:
-                if msg[1] == row["rekening"]:
-                    saldo_pengirim = row["saldo"]
-                    cek_pin = True if msg[4] == row["pin"] else False
-                    idx_pengirim = idx
                 if msg[2] == row["rekening"]:
+                    saldo_pengirim = row["saldo"]
+                    cek_pin = True if msg[5] == row["pin"] else False
+                    idx_pengirim = idx
+                if msg[3] == row["rekening"]:
                     saldo_penerima = row["saldo"]
                     idx_penerima = idx
                     nama_penerima = row["nama"]
                     cek_rek = True
                 idx += 1
         if not cek_rek:
-            return f"{True},{msg[1]},{saldo_pengirim},Nomor rekening tujuan tidak ditemukan"
+            return f"{True},{msg[2]},{saldo_pengirim},Nomor rekening tujuan tidak ditemukan"
         if cek_pin:
-            saldo_pengirim = int(saldo_pengirim) - int(msg[3])
-            saldo_penerima = int(saldo_penerima) + int(msg[3])
-            pd = pandas.read_csv("account.csv")
+            saldo_pengirim = int(saldo_pengirim) - int(msg[4])
+            saldo_penerima = int(saldo_penerima) + int(msg[4])
             pd.loc[idx_pengirim, "saldo"] = saldo_pengirim
+            if pd.at[idx_pengirim, "mutasi"] == "kosong":
+                pd.loc[idx_pengirim, "mutasi"] = f"Transfer | {msg[6]} | -{msg[4]}"
+            else:
+                mutasi = pd.at[idx_pengirim, "mutasi"]+f"&Transfer | {msg[6]} | -{msg[4]}"
+                pd.loc[idx_pengirim, "mutasi"] = mutasi
             pd.loc[idx_penerima, "saldo"] = saldo_penerima
+            if pd.at[idx_penerima, "mutasi"] == "kosong":
+                pd.loc[idx_penerima, "mutasi"] = f"Transfer | {msg[6]} | +{msg[4]}"
+            else:
+                mutasi = pd.at[idx_penerima, "mutasi"]+f"&Transfer | {msg[6]} | +{msg[4]}"
+                pd.loc[idx_penerima, "mutasi"] = mutasi
             pd.to_csv("account.csv", index=False)
-            return f"{True},{msg[1]},{saldo_pengirim},Berhasil transfer ke {nama_penerima} sebesar {msg[3]}"
+            return f"{True},{msg[2]},{saldo_pengirim},Berhasil transfer ke {nama_penerima} sebesar {msg[4]}"
         else:
-            return f"{True},{msg[1]},{saldo_pengirim},Pin yang anda masukkan salah"
+            return f"{True},{msg[2]},{saldo_pengirim},Pin yang anda masukkan salah"
            
-               
+    def info(self, rekening):
+        with open("account.csv", "r") as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                if rekening == row["rekening"]:
+                    return f"{True},{rekening},{row['saldo']},{row['nama']},{row['mutasi']},"
 
+    def operasi(self, msg):
+        if msg[1] == "register":
+            return f"register,{self.register(msg[2], msg[3])}"
+        elif msg[1] == "register_2":
+            return f"register_2,{self.register_2(msg[2], msg[3])}"
+        elif msg[1] == "login":
+            return f"login,{self.login(msg[2], msg[3])}"
+        elif msg[1] == "tarik_tunai":
+            return f"tarik_tunai,{self.depo_tarikTunai(msg)}"
+        elif msg[1] == "deposit":
+            return f"deposit,{self.depo_tarikTunai(msg)}"
+        elif msg[1] == "transfer":
+            return f"transfer,{self.transfer(msg)}"
+        elif msg[1] == "info":
+            return f"info,{self.info(msg[2])}"
+
+                
 class Server(dataBase):
     def __init__(self):
         super().__init__()
         self.mqttBroker ="mqtt.eclipseprojects.io"
         self.topicClient = "client"
-        self.topicServer = "server"
+        self.topicServer = ""
 
     def connect(self):
         self.client = mqtt.Client(f"Server-{random.randint(1, 999)}")
@@ -119,26 +157,13 @@ class Server(dataBase):
         print(f"publish {data} dengan topic {self.topicServer}")
 
     def response(self, msg):
-        msg = list(msg.split(","))
-        if msg[0] == "register":
-            self.publish(f"register,{self.register(msg[1], msg[2])}")
-        elif msg[0] == "register_2":
-            self.publish(f"register_2,{self.register_2(msg[1], msg[2])}")
-        elif msg[0] == "login":
-            self.publish(f"login,{self.login(msg[1], msg[2])}")
-        elif msg[0] == "tarik_tunai":
-            self.publish(f"tarik_tunai,{self.depo_tarikTunai(msg)}")
-        elif msg[0] == "deposit":
-            self.publish(f"deposit,{self.depo_tarikTunai(msg)}")
-        elif msg[0] == "transfer":
-            self.publish(f"transfer,{self.transfer(msg)}")
+        self.topicServer = msg[0]
+        self.publish(self.operasi(msg))
         
     def subscribe(self):
         def on_message(client, userdata, message):
             print("received message:" ,message.payload.decode("utf-8"))
-            # self.publish(message.payload.decode("utf-8"))
-            self.response(message.payload.decode("utf-8"))
-
+            self.response(list(message.payload.decode("utf-8").split(",")))
         self.client.subscribe(self.topicClient)
         self.client.on_message = on_message
 
