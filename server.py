@@ -11,7 +11,6 @@ class dataBase():
             with open("account.csv", "w", newline="") as file:
                 writer = csv.DictWriter(file, fieldnames=self.fieldname)
                 writer.writeheader()
-        self.tmpRow = []
 
     def register(self, username, password):
         ganda = False
@@ -22,14 +21,11 @@ class dataBase():
                     ganda = True
 
         if not ganda:
-            self.tmpRow.clear()
-            self.tmpRow.append(username)
-            self.tmpRow.append(password)
-            return True
+            return f"{True},{username},{password}"
         else:
-            return False
+            return f"{False}"
         
-    def register_2(self, nama, pin):
+    def register_2(self, nama, pin, username, password):
         awal = list("00000")
         tmp = str(random.randrange(1, 99999))
         for i in range(5):
@@ -39,7 +35,7 @@ class dataBase():
         
         with open("account.csv", "a", newline="") as file:
             writer = csv.DictWriter(file, fieldnames=self.fieldname)
-            writer.writerow({"username":self.tmpRow[0], "password":self.tmpRow[1], "nama":nama, "pin":pin, "rekening":rekening, "saldo":0, "mutasi":"kosong"})
+            writer.writerow({"username":username, "password":password, "nama":nama, "pin":pin, "rekening":rekening, "saldo":0, "mutasi":"kosong"})
 
         return True
 
@@ -128,7 +124,7 @@ class dataBase():
         if msg[1] == "register":
             return f"register,{self.register(msg[2], msg[3])}"
         elif msg[1] == "register_2":
-            return f"register_2,{self.register_2(msg[2], msg[3])}"
+            return f"register_2,{self.register_2(msg[2], msg[3], msg[4], msg[5])}"
         elif msg[1] == "login":
             return f"login,{self.login(msg[2], msg[3])}"
         elif msg[1] == "tarik_tunai":

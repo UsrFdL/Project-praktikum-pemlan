@@ -25,7 +25,7 @@ class ATM():
             except ValueError:
                 print("Masukan harus angka")
             time.sleep(2)
-        return masukan 
+        return masukan
 
     def menu_login(self, msg):
         if msg[1]:
@@ -183,7 +183,7 @@ class ATM():
         elif msg[0] == "register":
             if eval(msg[1]):
                 nama, pin = self.menu_register()
-                return f"register_2,{nama},{pin}"
+                return f"register_2,{nama},{pin},{msg[2]},{msg[3]}"
             else:
                 print("Username sudah digunakan")
                 time.sleep(2)
