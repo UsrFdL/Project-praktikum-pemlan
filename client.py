@@ -49,8 +49,22 @@ class ATM():
     def menu_register(self):
         os.system('cls' if os.name == 'nt' else 'clear')
         nama = input("Nama lengkap anda:\n:> ")
-        os.system('cls' if os.name == 'nt' else 'clear')
-        pin = input("PIN:\n:> ")
+        while True:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            pin = input("PIN:\n:> ")
+            try:
+                int(pin)
+            except ValueError:
+                print("Pin harus angka")
+            else:
+                if int(pin) < 0:
+                    print("Pin harus bilangan positif")
+                elif len(pin) != 4:
+                    print("Pin berjumlah 4 digit")
+                else:
+                    break
+            time.sleep(2)
+            
         return nama, pin
         
     def tarik_tunai(self, msg):
@@ -244,7 +258,7 @@ class Client(ATM):
 
     def publish(self, teks):
         self.client.publish(self.topicClient, teks)
-        print(f"publish {teks} dengan topic {self.topicClient}")
+        # print(f"publish {teks} dengan topic {self.topicClient}")
 
     def request(self, msg=["home"]):
         self.publish(f"{self.topicServer},{self.dashboard(msg)}")
